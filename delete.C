@@ -26,15 +26,22 @@ const Status QU_Delete(const string & relation,
 	if (status != OK) { return status; };
 
 	const char *filter;
- 	switch (type) {
+ 	char buff[sizeof(float)];
+	
+	int tmpInt;
+	float tmpFloat;
+
+	switch (type) {
             case INTEGER:{
                 int tmpInt = atoi(attrValue);
-                filter = (char *) &tmpInt;
+		memcpy(buff, &tmpInt, sizeof(tmpInt));
+                filter = buff;
                 break;
 	    }
             case FLOAT:{
                 float tmpFloat = atof(attrValue);
-                filter = (char *) &tmpFloat;
+		memcpy(buff, &tmpFloat, sizeof(tmpFloat));
+                filter = buff;
                 break;
 	    }
             case STRING:{
