@@ -38,30 +38,38 @@ const Status QU_Select(const string & result,
 			return status;
 	}
 
-	void *filter;
-	int tmpInt;
-	float tmpFloat;
-
-	switch (attr->attrType) {
-		case INTEGER:
-			tmpInt = atoi(attrValue);
-			filter = (void *) &tmpInt;	
-			break;
-		case FLOAT:
-			tmpFloat = atof(attrValue);
-			filter = (void *) &tmpFloat;	
-			break;
-		case STRING:
-			filter = (void *) attrValue;
-			break;
-	}
-
 	//desc for the selection attr
 	AttrDesc attrDesc;
-	status = attrCat->getInfo(attr->relName, attr->attrName, attrDesc);
-	
-	if (status != OK)
-		return status;
+    AttrDesc *attrDescPtr = NULL;
+    void *filter;
+    int tmpInt;
+    float tmpFloat;
+
+    if (attr != NULL) {
+        cout << "attr" << attr << endl;
+        switch (attr->attrType) {
+            case INTEGER:
+                tmpInt = atoi(attrValue);
+                filter = (void *) &tmpInt;	
+                break;
+            case FLOAT:
+                tmpFloat = atof(attrValue);
+                filter = (void *) &tmpFloat;	
+                break;
+            case STRING:
+                filter = (void *) attrValue;
+                break;
+        }
+
+        status = attrCat->getInfo(attr->relName, attr->attrName, attrDesc);
+        
+        if (status != OK)
+            return status;
+            
+        attrDescPtr = &attrDesc;
+    } else {
+        filter = NULL;
+    }
 
 	int reclen = 0;
 
@@ -69,7 +77,7 @@ const Status QU_Select(const string & result,
 	for (int i = 0; i < projCnt; i++)
 		reclen += attrDescArr[i].attrLen;
 
-	return ScanSelect(result, projCnt, attrDescArr, &attrDesc, op, (char *)filter, reclen);
+	return ScanSelect(result, projCnt, attrDescArr, attrDescPtr, op, (char *)filter, reclen);
 }
 
 
@@ -97,13 +105,24 @@ const Status ScanSelect(const string & result,
 	outputRec.data = (void*) outputData;
 	outputRec.length = reclen;
 		
-	HeapFileScan filterScan(string(attrDesc->relName), status);
+    string relName;
+    if (attrDesc) {
+        relName = string(attrDesc->relName);
+    } else {
+        relName = string(projNames[0].relName);
+    }
+    
+	HeapFileScan filterScan(relName, status);
 
 	if (status != OK)
 		return status;
 
 
-	status = filterScan.startScan(attrDesc->attrOffset, attrDesc->attrLen, (Datatype)attrDesc->attrType, filter, op);
+    if (attrDesc) {
+	    status = filterScan.startScan(attrDesc->attrOffset, attrDesc->attrLen, (Datatype)attrDesc->attrType, filter, op);
+    } else {
+        status = filterScan.startScan(0, 0, STRING, NULL, EQ);
+    }
 
 	RID filteredRID;
 	Record filteredRec;
