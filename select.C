@@ -46,7 +46,6 @@ const Status QU_Select(const string & result,
     float tmpFloat;
 
     if (attr != NULL) {
-        cout << "attr" << attr << endl;
         switch (attr->attrType) {
             case INTEGER:
                 tmpInt = atoi(attrValue);

@@ -1,1 +1,2 @@
 Benjamin Kang, bkang53@wisc.edu, complete delete.C and help with debugging.
+Christopher Lin, cblin@wisc.edu, implement insert and debugged
